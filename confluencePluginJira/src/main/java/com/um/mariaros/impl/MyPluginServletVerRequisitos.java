@@ -1,7 +1,7 @@
 package com.um.mariaros.impl;
 import com.um.mariaros.impl.ServletHelper;
 
-import javax.servlet.*;
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -19,6 +19,7 @@ import com.atlassian.applinks.api.application.jira.JiraApplicationType;
 import com.atlassian.applinks.api.ApplicationLinkService;
 import com.atlassian.applinks.api.ApplicationType;
 import com.atlassian.applinks.api.ApplicationLink;
+import com.atlassian.sal.api.message.I18nResolver;
 
 
 public class MyPluginServletVerRequisitos extends HttpServlet {
@@ -28,13 +29,16 @@ public class MyPluginServletVerRequisitos extends HttpServlet {
     private final LoginUriProvider loginUriProvider;
     @ComponentImport
     private final ApplicationLinkService applicationLinkService;
+    @ComponentImport
+    private final I18nResolver i18n;
 
     @Inject
     public MyPluginServletVerRequisitos(UserManager userManager, LoginUriProvider loginUriProvider,
-            ApplicationLinkService applicationLinkService) {
+            ApplicationLinkService applicationLinkService, I18nResolver i18n) {
         this.userManager = userManager;
         this.loginUriProvider = loginUriProvider;
         this.applicationLinkService = applicationLinkService;
+        this.i18n = i18n;
     }
 
     // Si doGet recibe un parámetro con una 'key' a una incidencia, muestra una tabla con esa incidencia concreta;
@@ -51,7 +55,11 @@ public class MyPluginServletVerRequisitos extends HttpServlet {
         final StringBuffer stringBuffer = new StringBuffer();
 
         stringBuffer.append(
-                "<html><head><title>Gestión de requisitos</title><meta name='decorator' content='atl.general'></head><body>");
+                "<html><head><title>"
+                + i18n.getText("servlet.req-management-label")
+                +"</title><meta name='decorator' content='atl.general'>"
+                +"<style type='text/css'> .table-title:hover { cursor:pointer; } </style>"
+                +"</head><body>");
         String key = request.getParameter("key");
 
         // Conexión con Jira
@@ -59,20 +67,17 @@ public class MyPluginServletVerRequisitos extends HttpServlet {
                 .getApplicationLinks(JiraApplicationType.class)) {
 
             try {
-                ServletHelper helper = new ServletHelper(applicationLink);
+                ServletHelper helper = new ServletHelper(applicationLink, i18n);
                 // Si no recibe el parámetro key muestra todo
-                // TODO: usar la REST API de Jira en lugar de pedir el XML
                 if (key == null) {
-                    String url = "http://localhost:2990/jira/sr/jira.issueviews:searchrequest-xml/temp/SearchRequest.xml"
-                            + "?jqlQuery=issuetype+%3D+'Requisito+del+sistema'+OR+issuetype+%3D+'Historia+de+usuario'+&tempMax=1000";
-
+                    String url = "http://localhost:2990/jira/rest/api/2/search?jql=issuetype+%3D+%27Requisito+del+sistema%27+OR+issuetype+%3D+%27Historia+de+usuario%27+&tempMax=1000";
                     Request req = applicationLink.createImpersonatingAuthenticatedRequestFactory()
                             .createRequest(Request.MethodType.GET, url);
 
                     req.executeAndReturn(new ReturningResponseHandler() {
                         public Object handle(Response res) throws ResponseException {
                             if (res.isSuccessful()) {
-                                stringBuffer.append(helper.parseXMLTable(res.getResponseBodyAsString()));
+                                stringBuffer.append(helper.parseJSONTable(res.getResponseBodyAsString()));
                             }
                             return null;
                         }
@@ -81,8 +86,7 @@ public class MyPluginServletVerRequisitos extends HttpServlet {
                 } else {
                     
                     // Si recibe una key, usa su valor para la petición a Jira
-                    // TODO: usar la REST API de Jira en lugar de pedir el XML
-                    String url = "http://localhost:2990/jira/si/jira.issueviews:issue-xml/" + key + "/" + key + ".xml";
+                    String url = "http://localhost:2990/jira/rest/api/2/issue/" + key;
 
                     Request req = applicationLink.createImpersonatingAuthenticatedRequestFactory()
                             .createRequest(Request.MethodType.GET, url);
@@ -90,7 +94,7 @@ public class MyPluginServletVerRequisitos extends HttpServlet {
                     req.executeAndReturn(new ReturningResponseHandler() {
                         public Object handle(Response res) throws ResponseException {
                             if (res.isSuccessful()) {
-                                stringBuffer.append(helper.parseXMLIssue(res.getResponseBodyAsString()));
+                                stringBuffer.append(helper.parseJSONIssue(res.getResponseBodyAsString()));
                             }
                             return null;
                         }
@@ -98,7 +102,9 @@ public class MyPluginServletVerRequisitos extends HttpServlet {
                 }
 
             } catch (Exception e) {
-                stringBuffer.append("<p>Error al cargar la información</p>");
+                stringBuffer.append("<p>"
+                + i18n.getText("servlet.error-loading-label")
+                +"</p>");
                 e.printStackTrace();
             }
 
@@ -122,7 +128,9 @@ public class MyPluginServletVerRequisitos extends HttpServlet {
         final StringBuffer stringBuffer = new StringBuffer();
 
         stringBuffer.append(
-                "<html><head><title>Gestión de requisitos</title><meta name='decorator' content='atl.general'></head><body>");
+                "<html><head><title>"
+                + i18n.getText("servlet.req-management-label")
+                +"</title><meta name='decorator' content='atl.general'></head><body>");
         
         // key del requisito a reutilizar
         String key = request.getParameter("key");
@@ -143,16 +151,20 @@ public class MyPluginServletVerRequisitos extends HttpServlet {
                 } else {
                     url += "&enlaces=[]";
                 }
-
+                
                 Request req = applicationLink.createImpersonatingAuthenticatedRequestFactory()
                         .createRequest(Request.MethodType.GET, url);
 
                 req.executeAndReturn(new ReturningResponseHandler() {
                     public Object handle(Response res) throws ResponseException {
                         if (res.isSuccessful()) {
-                            stringBuffer.append("<p>Requisito reutilizado.</p><br/>");
+                            stringBuffer.append("<p>"
+                            + i18n.getText("servlet.req-reused-label")
+                            +"</p><br/>");
                             stringBuffer.append("<form action='/confluence/plugins/servlet/verrequisitos'>");
-                            stringBuffer.append("<input class='aui-button' type='submit' value='Volver' />");
+                            stringBuffer.append("<input class='aui-button' type='submit' value='"
+                            + i18n.getText("servlet.go-back-button")
+                            +"' />");
                             stringBuffer.append("</form>");
                         }
                         return null;
@@ -160,9 +172,13 @@ public class MyPluginServletVerRequisitos extends HttpServlet {
                 });
 
             } catch (Exception e) {
-                stringBuffer.append("<p>Error al reutilizar el requisito.</p>");
+                stringBuffer.append("<p>"
+                + i18n.getText("servlet.req-not-reused-label")
+                +".</p>");
                 stringBuffer.append("<form action='/confluence/plugins/servlet/verrequisitos'>");
-                stringBuffer.append("<input class='aui-button' type='submit' value='Volver' />");
+                stringBuffer.append("<input class='aui-button' type='submit' value='"
+                + i18n.getText("servlet.go-back-button")
+                +"' />");
                 stringBuffer.append("</form>");
                 e.printStackTrace();
             }

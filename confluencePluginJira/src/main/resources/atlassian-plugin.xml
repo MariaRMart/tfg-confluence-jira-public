@@ -18,46 +18,27 @@
     <resource type="download" name="images/" location="/images" />
     <context>confluencePluginJira</context>
   </web-resource>
-  <servlet name="Ver requisitos" key="mypluginservletverrequisitos" class="com.um.mariaros.impl.MyPluginServletVerRequisitos">
-    <description>Servlet 'ver requisitos' para el plugin de gesti?n de requisitos.</description>
+
+  <servlet i18n-name-key="see-req-servlet.name" key="mypluginservletverrequisitos" class="com.um.mariaros.impl.MyPluginServletVerRequisitos">
+    <description key="see-req-servlet.desc"></description>
     <url-pattern>/verrequisitos*</url-pattern>
   </servlet>
-  <servlet name="Nuevo requisitos" key="mypluginservletnuevorequisito" class="com.um.mariaros.impl.MyPluginServletNuevoRequisito">
-    <description>Servlet 'nuevo requisito' para el plugin de gesti?n de requisitos.</description>
+
+  <servlet i18n-name-key="new-req-servlet.name" key="mypluginservletnuevorequisito" class="com.um.mariaros.impl.MyPluginServletNuevoRequisito">
+    <description key="new-req-servlet.desc"></description>
     <url-pattern>/nuevorequisito</url-pattern>
   </servlet>
 
-  <!-- system.header/left /plugins/servlet/nuevorequisito /plugins/servlet/verrequisitos requisitos-link/gestionarrequisitos -->
-  <!-- 
-  <web-item name="Requisitos" i18n-name-key="requisitos.name" key="requisitos" section="system.header/left" weight="1000"> 
-    <description key="requisitos.description">The Requisitos Plugin</description>  
-    <label key="requisitos.label"/>  
-    <link linkId="requisitos-link"></link> 
-  </web-item>  
-  <web-section name="Gestionar requisitos" i18n-name-key="gestionarrequisitos.name" key="gestionarrequisitos" location="requisitos-link" weight="1000"> 
-    <description key="gestionarrequisitos.description">The Gestionar requisitos Plugin</description>  
-    <label key="gestionarrequisitos.label"/> 
-  </web-section>   
-  <web-item name="Ver requisitos" i18n-name-key="verrequisitos.name" key="verrequisitos" section="gestionarrequisitos" weight="1000"> 
-    <description key="verrequisitos.description">The Ver requisitos Plugin</description>  
-    <label key="verrequisitos.label"/>  
-    <link linkId="verrequisitos-link">/plugins/servlet/verrequisitos</link> 
-  </web-item>  
-  <web-item name="Nuevo requisito" i18n-name-key="nuevorequisito.name" key="nuevorequisito" section="gestionarrequisitos" weight="1000"> 
-    <description key="nuevorequisito.description">The Nuevo requisito Plugin</description>  
-    <label key="nuevorequisito.label"></label>  
-    <link linkId="nuevorequisito-link">/plugins/servlet/nuevorequisito</link> 
-  </web-item>
-  -->
-
-  <web-item name="Ver requisitos" i18n-name-key="verrequisitos.name" key="verrequisitos" section="system.header/left" weight="1000">
-    <description key="verrequisitos.description">The Ver requisitos Plugin</description>
-    <label key="verrequisitos.label" />
+  <web-item i18n-name-key="see-req-webitem.name" key="verrequisitos" section="system.header/left" weight="1000">
+    <description key="see-req-webitem.desc"></description>
+    <label key="see-req-webitem.label" />
     <link linkId="verrequisitos-link">/plugins/servlet/verrequisitos</link>
   </web-item>
-  <web-item name="Nuevo requisito" i18n-name-key="nuevorequisito.name" key="nuevorequisito" section="system.header/left" weight="1000">
-    <description key="nuevorequisito.description">The Nuevo requisito Plugin</description>
-    <label key="nuevorequisito.label"></label>
+
+  <web-item i18n-name-key="new-req-webitem.name" key="nuevorequisito" section="system.header/left" weight="1000">
+    <description key="new-req-webitem.desc"></description>
+    <label key="new-req-webitem.label"></label>
     <link linkId="nuevorequisito-link">/plugins/servlet/nuevorequisito</link>
   </web-item>
+  
 </atlassian-plugin>

@@ -1,15 +1,15 @@
 package com.um.mariaros.impl;
 import com.um.mariaros.impl.ServletHelper;
 
-import javax.servlet.*;
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import javax.inject.Inject;
-import org.json.*;
 
-import java.text.SimpleDateFormat;
+import org.json.JSONObject;
+
 import java.util.Date;
 
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
@@ -23,6 +23,7 @@ import com.atlassian.applinks.api.application.jira.JiraApplicationType;
 import com.atlassian.applinks.api.ApplicationLinkService;
 import com.atlassian.applinks.api.ApplicationType;
 import com.atlassian.applinks.api.ApplicationLink;
+import com.atlassian.sal.api.message.I18nResolver;
 
 public class MyPluginServletNuevoRequisito extends HttpServlet {
     @ComponentImport
@@ -31,13 +32,17 @@ public class MyPluginServletNuevoRequisito extends HttpServlet {
     private final LoginUriProvider loginUriProvider;
     @ComponentImport
     private final ApplicationLinkService applicationLinkService;
+    @ComponentImport
+    private final I18nResolver i18n;
 
     @Inject
     public MyPluginServletNuevoRequisito(UserManager userManager, LoginUriProvider loginUriProvider,
-            ApplicationLinkService applicationLinkService) {
+            ApplicationLinkService applicationLinkService, I18nResolver i18n) {
         this.userManager = userManager;
         this.loginUriProvider = loginUriProvider;
         this.applicationLinkService = applicationLinkService;
+        this.i18n = i18n;
+
     }
 
     @Override
@@ -53,9 +58,11 @@ public class MyPluginServletNuevoRequisito extends HttpServlet {
         for (final ApplicationLink applicationLink : this.applicationLinkService
                 .getApplicationLinks(JiraApplicationType.class)) {
             try {
-                ServletHelper helper = new ServletHelper(applicationLink);
+                ServletHelper helper = new ServletHelper(applicationLink, i18n);
                 stringBuffer.append(
-                        "<html><head><title>Nuevo requisito</title><meta name='decorator' content='atl.general'></head><body><hr>");
+                        "<html><head><title>"
+                        + i18n.getText("servlet.new-requirement-label")
+                        +"</title><meta name='decorator' content='atl.general'></head><body><hr>");
                 stringBuffer.append(helper.getFormularioNuevoRequisito());
                 stringBuffer.append("</body><footer /></html>");
 
@@ -82,7 +89,9 @@ public class MyPluginServletNuevoRequisito extends HttpServlet {
         StringBuffer stringBuffer = new StringBuffer();
 
         stringBuffer.append(
-                "<html><head><title>Nuevo requisito</title><meta name='decorator' content='atl.general'></head><body><hr>");
+                "<html><head><title>"
+                + i18n.getText("servlet.new-requirement-label")
+                +"</title><meta name='decorator' content='atl.general'></head><body><hr>");
 
         String projectId = request.getParameter("pid");
         String issuetype = request.getParameter("issuetype");
@@ -139,16 +148,26 @@ public class MyPluginServletNuevoRequisito extends HttpServlet {
                 String link = json.getString("self");
 
                 stringBuffer
-                        .append("<p>Se ha creado la incidencia <a href='/confluence/plugins/servlet/verrequisitos?key="
+                        .append("<p>"
+                        + i18n.getText("servlet.new-requirement-created-label")
+                        +" <a href='/confluence/plugins/servlet/verrequisitos?key="
                                 + key + "'>" + key + "</a></p><br/>");
                 stringBuffer.append("<form action='/confluence/plugins/servlet/nuevorequisito'>");
-                stringBuffer.append("<input class='aui-button' type='submit' value='Volver' />");
+                stringBuffer.append("<input class='aui-button' type='submit' value='"
+                + i18n.getText("servlet.go-back-button")
+                +"' />");
                 stringBuffer.append("</form>");
 
             } catch (Exception e) {
                 e.printStackTrace();
-                stringBuffer.append("<p>Hubo un error al crear la incidencia.</p>");
-                stringBuffer.append("<p><a href='/confluence/plugins/servlet/nuevorequisito'>Volver</a></p>");
+                stringBuffer.append("<p>"
+                + i18n.getText("servlet.new-requirement-error-label")
+                +"</p><br/>");
+                stringBuffer.append("<form action='/confluence/plugins/servlet/nuevorequisito'>");
+                stringBuffer.append("<input class='aui-button' type='submit' value='"
+                + i18n.getText("servlet.go-back-button")
+                +"' />");
+                stringBuffer.append("</form>");
             }
         }
         stringBuffer.append("</body><footer /></html>");
